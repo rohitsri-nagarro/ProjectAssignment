@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+
+username: user
+userpassword: user
+adminname: admin
+adminpassword: admin
+
+server:
+  servlet:
+    session:
+      timeout: 5m

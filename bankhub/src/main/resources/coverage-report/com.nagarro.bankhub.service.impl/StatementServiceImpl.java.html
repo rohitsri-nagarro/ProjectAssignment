@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatementServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bankhub</a> &gt; <a href="index.source.html" class="el_package">com.nagarro.bankhub.service.impl</a> &gt; <span class="el_source">StatementServiceImpl.java</span></div><h1>StatementServiceImpl.java</h1><pre class="source lang-java linenums">package com.nagarro.bankhub.service.impl;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import com.nagarro.bankhub.dao.AccountDao;
+import com.nagarro.bankhub.dao.StatementDao;
+import com.nagarro.bankhub.exceptions.DateParsingException;
+import com.nagarro.bankhub.exceptions.InValidAccountNumberException;
+import com.nagarro.bankhub.model.Account;
+import com.nagarro.bankhub.model.Statement;
+import com.nagarro.bankhub.responsedto.StatementListResponseDto;
+import com.nagarro.bankhub.responsedto.StatementResponseDto;
+import com.nagarro.bankhub.service.StatementService;
+import com.nagarro.bankhub.utils.Constants;
+import com.nagarro.bankhub.utils.DateAndAmounValidator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
+@Service
+@RequiredArgsConstructor
+<span class="fc" id="L26">@Log4j2</span>
+public class StatementServiceImpl implements StatementService {
+
+	private final AccountDao accountDao;
+	private final StatementDao statementDao;
+	private final ModelMapper mapper;
+
+	// Date formatter
+<span class="fc" id="L34">	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.DATE_FORMAT);</span>
+
+	@Override
+	public StatementListResponseDto statement(String accountId, String fromDate, String toDate, String startAmount,
+			String endAmount) {
+		// Validate date range
+<span class="fc" id="L40">		DateAndAmounValidator.validFromDateToDate(fromDate, toDate);</span>
+
+		// Validate amount range
+<span class="fc" id="L43">		DateAndAmounValidator.validFromAmountRange(startAmount, endAmount);</span>
+
+		// Retrieve account details
+<span class="fc" id="L46">		Account accountDetails = accountDao.findById(accountId)</span>
+<span class="pc" id="L47">				.orElseThrow(() -&gt; new InValidAccountNumberException(Constants.FIELD_ACCOUNT_ID,</span>
+						Constants.FILED_ACCOUNT_NUMBER_ERROR));
+
+		// Fetch all statements related to the account
+<span class="fc" id="L51">		List&lt;Statement&gt; allStatements = statementDao.findByAccountId(accountDetails.getId());</span>
+
+		// Get authenticated username
+<span class="fc" id="L54">		String username = SecurityContextHolder.getContext().getAuthentication().getName();</span>
+
+<span class="fc" id="L56">		boolean isUser = &quot;user&quot;.equals(username);</span>
+		String message;
+
+		// Prepare message based on user role and parameters
+<span class="fc bfc" id="L60" title="All 2 branches covered.">		if (isUser) {</span>
+<span class="pc bpc" id="L61" title="7 of 8 branches missed.">			if (fromDate != null || toDate != null || startAmount != null || endAmount != null) {</span>
+<span class="fc" id="L62">				message = String.format(Constants.MESSAGE_USER_ATTEMPTED_FILTER, fromDate, toDate, startAmount,</span>
+						endAmount);
+<span class="fc" id="L64">				log.warn(message);</span>
+			} else {
+<span class="nc" id="L66">				message = Constants.MESSAGE_PAST_3_MONTHS_STATEMENTS;</span>
+			}
+		} else {
+<span class="fc" id="L69">			message = Constants.MESSAGE_STATEMENTS_FETCHED_SUCCESSFULLY;</span>
+		}
+
+		// Apply filters
+<span class="pc bpc" id="L73" title="7 of 10 branches missed.">		boolean restrictToLastThreeMonths = isUser</span>
+				|| (fromDate == null &amp;&amp; toDate == null &amp;&amp; startAmount == null &amp;&amp; endAmount == null);
+<span class="fc" id="L75">		List&lt;Statement&gt; filteredStatements = filterStatements(allStatements, fromDate, toDate, startAmount, endAmount,</span>
+				restrictToLastThreeMonths);
+
+		// Convert to StatementResponseDto
+<span class="fc" id="L79">		List&lt;StatementResponseDto&gt; statementDtos = filteredStatements.stream()</span>
+<span class="fc" id="L80">				.map(statement -&gt; mapper.map(statement, StatementResponseDto.class)).collect(Collectors.toList());</span>
+
+		// Get the masked account number
+<span class="fc" id="L83">		String maskedAccountNumber = maskAccountNumber(accountDetails.getAccountNumber());</span>
+		// Create and return the response DTO with the account number at the top level
+<span class="fc" id="L85">		return new StatementListResponseDto(maskedAccountNumber, statementDtos, message);</span>
+	}
+
+	private List&lt;Statement&gt; filterStatements(List&lt;Statement&gt; statements, String fromDate, String toDate,
+											 String startAmount, String endAmount, boolean restrictToLastThreeMonths) {
+<span class="fc" id="L90">		LocalDate threeMonthsAgo = getThreeMonthsAgo();</span>
+
+		// Ensure default date range for the last three months
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		final LocalDate from = (restrictToLastThreeMonths) ? threeMonthsAgo</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">				: (fromDate != null ? parseDate(fromDate) : null);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">		final LocalDate to = (restrictToLastThreeMonths) ? LocalDate.now()</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">				: (toDate != null ? parseDate(toDate) : null);</span>
+
+		// If restrictToLastThreeMonths is true (e.g., for user), we skip amount filters
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">		final Double startAmt = (!restrictToLastThreeMonths &amp;&amp; startAmount != null) ? Double.parseDouble(startAmount) : null;</span>
+<span class="pc bpc" id="L100" title="1 of 4 branches missed.">		final Double endAmt = (!restrictToLastThreeMonths &amp;&amp; endAmount != null) ? Double.parseDouble(endAmount) : null;</span>
+
+<span class="fc" id="L102">		return statements.stream().filter(statement -&gt; {</span>
+<span class="fc" id="L103">			LocalDate statementDate = parseDate(statement.getDatefield());</span>
+
+			// Apply date range filter
+<span class="pc bpc" id="L106" title="2 of 8 branches missed.">			if (from != null &amp;&amp; to != null &amp;&amp; (statementDate.isBefore(from) || statementDate.isAfter(to))) {</span>
+<span class="fc" id="L107">				return false;</span>
+			}
+
+			// Apply amount range filter only if restrictToLastThreeMonths is false
+<span class="pc bpc" id="L111" title="2 of 4 branches missed.">			if (startAmt != null &amp;&amp; endAmt != null) {</span>
+<span class="fc" id="L112">				double amount = Double.parseDouble(statement.getAmount());</span>
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">				if (amount &lt; startAmt || amount &gt; endAmt) {</span>
+<span class="nc" id="L114">					return false;</span>
+				}
+			}
+
+<span class="fc" id="L118">			return true;</span>
+<span class="fc" id="L119">		}).toList();</span>
+	}
+
+	private LocalDate parseDate(String dateStr) {
+		try {
+<span class="fc" id="L124">			String sanitizedDateStr = dateStr.replace(&quot;\&quot;&quot;, &quot;&quot;).trim();</span>
+<span class="fc" id="L125">			return LocalDate.parse(sanitizedDateStr, formatter);</span>
+<span class="nc" id="L126">		} catch (Exception e) {</span>
+<span class="nc" id="L127">			log.error(&quot;Date parsing error: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L128">			throw new DateParsingException(&quot;date&quot;, Constants.FILED_DATE_ERROR);</span>
+		}
+	}
+
+	private LocalDate getThreeMonthsAgo() {
+<span class="fc" id="L133">		return LocalDate.now().minusMonths(3);</span>
+	}
+
+	private String maskAccountNumber(String accountNumber) {
+<span class="fc" id="L137">		int unmaskedDigits = Constants.ACCOUNT_UNMASKED_DIGITS;</span>
+<span class="fc" id="L138">		int length = accountNumber.length();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">		if (length &lt;= unmaskedDigits) {</span>
+<span class="nc" id="L140">			return accountNumber;</span>
+		}
+<span class="fc" id="L142">		String maskedPart = &quot;*&quot;.repeat(length - unmaskedDigits);</span>
+<span class="fc" id="L143">		String unmaskedPart = accountNumber.substring(length - unmaskedDigits);</span>
+<span class="fc" id="L144">		return maskedPart + unmaskedPart;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

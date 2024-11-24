@@ -1,0 +1,15 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+bankhub,com.nagarro.bankhub.exceptions,GlobalExceptionHandler,21,3,0,0,5,1,1,1,1,1
+bankhub,com.nagarro.bankhub.exceptions,GenericException,0,10,0,0,0,4,0,1,0,1
+bankhub,com.nagarro.bankhub.exceptions,DateParsingException,6,0,0,0,2,0,1,0,1,0
+bankhub,com.nagarro.bankhub.exceptions,InValidAccountNumberException,6,0,0,0,2,0,1,0,1,0
+bankhub,com.nagarro.bankhub.exceptions,InValidAmountException,0,6,0,0,0,2,0,1,0,1
+bankhub,com.nagarro.bankhub.exceptions,InValidDateException,0,6,0,0,0,2,0,1,0,1
+bankhub,com.nagarro.bankhub.controller,StatementController,15,0,0,0,2,0,1,0,1,0
+bankhub,com.nagarro.bankhub.config,Mapper,0,18,0,0,0,6,0,2,0,2
+bankhub,com.nagarro.bankhub.config,SecurityConfig,0,93,0,0,0,13,0,8,0,8
+bankhub,com.nagarro.bankhub.config,DatabaseConfig,0,15,0,0,0,5,0,2,0,2
+bankhub,com.nagarro.bankhub.utils,DateAndAmounValidator,19,172,2,22,6,29,3,14,1,4
+bankhub,com.nagarro.bankhub.responsedto,ResponseHandler,45,0,0,0,9,0,2,0,2,0
+bankhub,com.nagarro.bankhub,BankhubApplication,5,3,0,0,2,1,1,1,1,1
+bankhub,com.nagarro.bankhub.service.impl,StatementServiceImpl,39,246,25,29,6,45,20,16,1,8

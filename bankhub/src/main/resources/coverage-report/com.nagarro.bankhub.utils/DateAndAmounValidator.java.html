@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateAndAmounValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bankhub</a> &gt; <a href="index.source.html" class="el_package">com.nagarro.bankhub.utils</a> &gt; <span class="el_source">DateAndAmounValidator.java</span></div><h1>DateAndAmounValidator.java</h1><pre class="source lang-java linenums">package com.nagarro.bankhub.utils;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import com.nagarro.bankhub.exceptions.InValidAmountException;
+import com.nagarro.bankhub.exceptions.InValidDateException;
+
+<span class="nc" id="L8">public class DateAndAmounValidator {</span>
+
+<span class="fc" id="L10">	private static final SimpleDateFormat formatter = new SimpleDateFormat(&quot;dd.MM.yyyy&quot;);</span>
+
+	/**
+	 * Validates the date range between fromDate and toDate.
+	 *
+	 * @param fromDate The start date in dd.MM.yyyy format.
+	 * @param toDate   The end date in dd.MM.yyyy format.
+	 * @return true if the date range is valid.
+	 * @throws InValidDateException if any validation fails.
+	 */
+	public static boolean validFromDateToDate(String fromDate, String toDate) {
+		// Check if both dates are null or empty
+<span class="fc bfc" id="L22" title="All 4 branches covered.">		if (isNullOrEmpty(fromDate) &amp;&amp; isNullOrEmpty(toDate)) {</span>
+<span class="fc" id="L23">			return true; // No dates provided is valid</span>
+		}
+
+		// Check if only one date is null or empty
+<span class="fc bfc" id="L27" title="All 2 branches covered.">		if (isNullOrEmpty(fromDate)) {</span>
+<span class="fc" id="L28">			throw new InValidDateException(Constants.FIELD_FROM_DATE,</span>
+<span class="fc" id="L29">					String.format(Constants.ERROR_MISSING_DATE, Constants.FIELD_FROM_DATE, Constants.FIELD_TO_DATE));</span>
+		}
+<span class="fc bfc" id="L31" title="All 2 branches covered.">		if (isNullOrEmpty(toDate)) {</span>
+<span class="fc" id="L32">			throw new InValidDateException(Constants.FIELD_TO_DATE,</span>
+<span class="fc" id="L33">					String.format(Constants.ERROR_MISSING_DATE, Constants.FIELD_TO_DATE, Constants.FIELD_FROM_DATE));</span>
+		}
+
+		// Validate the date range
+		try {
+<span class="fc" id="L38">			var start = formatter.parse(fromDate);</span>
+<span class="fc" id="L39">			var end = formatter.parse(toDate);</span>
+
+<span class="fc bfc" id="L41" title="All 2 branches covered.">			if (start.after(end)) {</span>
+<span class="fc" id="L42">				throw new InValidDateException(Constants.FIELD_FROM_DATE,</span>
+<span class="fc" id="L43">						String.format(Constants.ERROR_INVALID_DATE_RANGE, fromDate, toDate));</span>
+			}
+<span class="nc" id="L45">		} catch (ParseException e) {</span>
+<span class="nc" id="L46">			throw new InValidDateException(Constants.FILED_DATE_FIELD, Constants.ERROR_INVALID_DATE_FORMAT);</span>
+<span class="fc" id="L47">		}</span>
+
+<span class="fc" id="L49">		return true;</span>
+	}
+
+	/**
+	 * Validates the amount range between startAmount and endAmount.
+	 *
+	 * @param amountStart The starting amount as a string.
+	 * @param amountEnd   The ending amount as a string.
+	 * @return true if the amount range is valid.
+	 * @throws InValidDateException if any validation fails.
+	 */
+	public static boolean validFromAmountRange(String amountStart, String amountEnd) {
+		// Check if both amounts are null or empty
+<span class="pc bpc" id="L62" title="1 of 4 branches missed.">		if (isNullOrEmpty(amountStart) &amp;&amp; isNullOrEmpty(amountEnd)) {</span>
+<span class="nc" id="L63">			return true; // No amounts provided is valid</span>
+		}
+
+		// Check if only one amount is null or empty
+<span class="fc bfc" id="L67" title="All 2 branches covered.">		if (isNullOrEmpty(amountStart)) {</span>
+<span class="fc" id="L68">			throw new InValidAmountException(Constants.FIELD_AMOUNT_START, String.format(Constants.ERROR_MISSING_AMOUNT,</span>
+					Constants.FIELD_AMOUNT_START, Constants.FIELD_AMOUNT_END));
+		}
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		if (isNullOrEmpty(amountEnd)) {</span>
+<span class="fc" id="L72">			throw new InValidAmountException(Constants.FIELD_AMOUNT_END, String.format(Constants.ERROR_MISSING_AMOUNT,</span>
+					Constants.FIELD_AMOUNT_END, Constants.FIELD_AMOUNT_START));
+		}
+
+		// Validate the amount range
+		try {
+<span class="fc" id="L78">			double start = Double.parseDouble(amountStart);</span>
+<span class="fc" id="L79">			double end = Double.parseDouble(amountEnd);</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">			if (end &lt; start) {</span>
+<span class="fc" id="L82">				throw new InValidAmountException(Constants.FIELD_AMOUNT_START,</span>
+<span class="fc" id="L83">						String.format(Constants.ERROR_AMOUNT_RANGE, amountEnd, amountStart));</span>
+			}
+<span class="nc" id="L85">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L86">			throw new InValidAmountException(Constants.FILED_ACCOUNT, Constants.ERROR_INVALID_AMOUNT_FORMAT);</span>
+<span class="fc" id="L87">		}</span>
+
+<span class="fc" id="L89">		return true;</span>
+	}
+
+	/**
+	 * Helper method to check if a string is null or empty.
+	 *
+	 * @param str The string to check.
+	 * @return true if the string is null or empty, false otherwise.
+	 */
+	private static boolean isNullOrEmpty(String str) {
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">		return str == null || str.trim().isEmpty();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
