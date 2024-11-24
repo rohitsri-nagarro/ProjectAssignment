@@ -1,8 +1,8 @@
-# Spring Boot Project: Statement Viewer
+# Spring Boot Project: Statement Viewer 🧑‍💻
 
 This project is a **Spring Boot** application designed to manage and display financial statements for users and administrators with specific features and access restrictions.
 
-## Features
+## Features 🚀
 
 ### Admin Features
 - Admin users can:
@@ -14,7 +14,7 @@ This project is a **Spring Boot** application designed to manage and display fin
   - View financial statements from the past **three months** only.
   - Access a simplified and limited interface for statement viewing.
 
-### Testing & Coverage
+### Testing & Coverage 🧪
 - Includes **JUnit tests** to ensure application reliability and functionality.
 - Generates a **test coverage report and Sonarcube report** located in the `/src/main/resources/reports` directory.
 
@@ -22,7 +22,6 @@ This project is a **Spring Boot** application designed to manage and display fin
 - **Java**: Primary programming language.
 - **Spring Boot**: Backend framework.
 - **Spring Data JPA**: For database interactions.
-- **H2 Database**: Used for development and testing.
 - **JUnit 5**: For unit testing.
 - **JaCoCo**: For test coverage reporting.
 
